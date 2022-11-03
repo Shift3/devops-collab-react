@@ -1,8 +1,6 @@
-
 version: 2.1
-
 jobs:
-  hello-job:
+  build_job:
     docker:
       - image: cimg/node:17.2.0 # the primary container, where your job's commands are run
         auth:
@@ -10,9 +8,69 @@ jobs:
           password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
     steps:
       - checkout # check out the code in the project directory
-      - run: echo "hello world" # run the `echo` command
+        #update the apt-get
+      - run:
+          name: Running update on apt-get
+          command: sudo apt update
+      #Install yarn dependcies and name it, in case if error
+      - run:
+          name: Setting up yarn dependencies
+          command: yarn install
+      #Starting Build and naming Build if fails, we can debug
+      - run:
+          name: Build
+          command: yarn build
+
+  test_job:
+    docker:
+      - image: cimg/node:17.2.0 # the primary container, where your job's commands are run
+        auth:
+          username: mydockerhub-user
+          password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
+    steps:
+      - checkout # check out the code in the project directory
+        #update the apt-get
+      - run:
+          name: Running update on apt-get
+          command: sudo apt update
+      #Install yarn dependcies and name it, in case if error
+      - run:
+          name: Setting up yarn dependencies
+          command: yarn install
+      #Starting Test Job
+      - run:
+          name: Test
+          command: yarn test-ci
+
+  # test_job:
+  #   docker:
+  #     - image: cimg/node:17.2.0 # the primary container, where your job's commands are run
+  #       auth:
+  #         username: mydockerhub-user
+  #         password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
+  #     steps:
+  #       - checkout # check out the code in the project directory
+  #       - run:
+  #         name: Test React Project
+  #         command: |
+  #           export CI=true
+  #           yarn install
+  #           yarn test
+  
+
+
+
+            
+
+          
+      
 
 workflows:
-  my-workflow:
+  test-workflow:
     jobs:
-      - hello-job
+      - build_job
+      - test_job
+  production-workflow:
+    jobs:
+      - build_job
+      - test_job
